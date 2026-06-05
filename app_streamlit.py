@@ -392,17 +392,25 @@ h3 {
 # ── Load models ───────────────────────────────────────────────
 @st.cache_resource
 def load_text_model():
-    tokenizer = AutoTokenizer.from_pretrained(str(TEXT_PATH))
-    model = AutoModelForSequenceClassification.from_pretrained(str(TEXT_PATH))
+    repo_id = "tv1089/mindspace-model"
+    tokenizer = AutoTokenizer.from_pretrained(repo_id, subfolder="mindify-final-v3")
+    model = AutoModelForSequenceClassification.from_pretrained(repo_id, subfolder="mindify-final-v3")
     model.eval()
     return tokenizer, model
 
 @st.cache_resource
 def load_speech_model():
-    with open(SPEECH_PATH / 'speech_config.json') as f:
+    from huggingface_hub import hf_hub_download
+    repo_id = "tv1089/mindspace-model"
+    
+    cfg_path = hf_hub_download(repo_id=repo_id, filename="speech_model_v2/speech_config.json")
+    with open(cfg_path) as f:
         cfg = json.load(f)
-    mean = np.load(SPEECH_PATH / 'feature_mean.npy')
-    std  = np.load(SPEECH_PATH / 'feature_std.npy')
+        
+    mean_path = hf_hub_download(repo_id=repo_id, filename="speech_model_v2/feature_mean.npy")
+    std_path = hf_hub_download(repo_id=repo_id, filename="speech_model_v2/feature_std.npy")
+    mean = np.load(mean_path)
+    std = np.load(std_path)
 
     class SpeechEmotionCNN(nn.Module):
         def __init__(self, input_size, num_classes):
@@ -433,8 +441,8 @@ def load_speech_model():
             return self.classifier(x.flatten(start_dim=1))
 
     model = SpeechEmotionCNN(cfg['input_size'], cfg['num_classes'])
-    model.load_state_dict(torch.load(
-        SPEECH_PATH / 'best_speech_model.pt', map_location='cpu'))
+    model_path = hf_hub_download(repo_id=repo_id, filename="speech_model_v2/best_speech_model.pt")
+    model.load_state_dict(torch.load(model_path, map_location='cpu'))
     model.eval()
     return model, cfg, mean, std
 
@@ -782,7 +790,7 @@ with tab2:
       <div style="font-size:0.83rem;color:#9c8a6e;">.wav · .mp3 · .ogg — speak naturally for the best results</div>
     </div>
     """, unsafe_allow_html=True)
-    uploaded = st.file_uploader("", type=['wav', 'mp3', 'ogg'], label_visibility="collapsed")
+    uploaded = st.file_uploader("Upload audio file", type=['wav', 'mp3', 'ogg'], label_visibility="collapsed")
     if uploaded:
         st.audio(uploaded)
         col1, col2 = st.columns([1.3, 4])
@@ -821,7 +829,7 @@ with tab3:
       <div style="font-size:0.83rem;color:#9c8a6e;">Speak naturally — say how you're feeling in your own words</div>
     </div>
     """, unsafe_allow_html=True)
-    recorded_audio = st.audio_input("", label_visibility="collapsed")
+    recorded_audio = st.audio_input("Record audio", label_visibility="collapsed")
     if recorded_audio is not None:
         col1, col2 = st.columns([1.3, 4])
         with col1:
