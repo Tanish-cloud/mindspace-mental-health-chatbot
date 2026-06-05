@@ -1,0 +1,12 @@
+# Ignore the massive ML folders so GitHub doesn't block the push!
+models/
+data/
+
+# Standard Python ignores
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+.venv
+env/
+venv/
