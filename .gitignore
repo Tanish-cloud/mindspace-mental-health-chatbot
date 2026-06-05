@@ -10,3 +10,16 @@ __pycache__/
 .venv
 env/
 venv/
+
+# Ignore local training and scratch scripts for clean GitHub repo
+build_dataset.py
+check_anxiety_samples.py
+check_stress_samples.py
+mindify.py
+retrain*.py
+speech_predict_v2.py
+test_groq.py
+test_inference.py
+train_speech_v2.py
+upload_models.py
+.vscode/
